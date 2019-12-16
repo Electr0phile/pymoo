@@ -155,7 +155,7 @@ class Algorithm:
 
         # other run dependent variables that are reset
         self.n_gen = None
-        self.history = []
+        self.history = None
         self.pop = None
         self.opt = None
 
@@ -241,14 +241,13 @@ class Algorithm:
             self.callback(self)
 
         if self.save_history:
-            hist, _callback = self.history, self.callback
-            self.history, self.callback = None, None
+            if self.history is None:
+                self.history = np.zeros((self.termination.n_max_gen,
+                                         self.pop_size,
+                                         self.problem.n_obj),
+                                    dtype=np.float64)
 
-            obj = copy.deepcopy(self)
-            self.history = hist
-            self.callback = _callback
-
-            self.history.append(obj)
+            self.history[self.n_gen-1, :, :] = np.asarray([P.F for P in self.pop])
 
     # attributes are a list of tuples of length 3: (name, val, width)
     def _display(self, disp, header=False):
@@ -283,7 +282,7 @@ def filter_optimum(pop, least_infeasible=False):
         F = ret.get("F")
 
         if F.shape[1] > 1:
-            I = NonDominatedSorting().do(ret.get("F"), only_non_dominated_front=True)
+            I = NonDominatedSorting().do(ret.get("X"), ret.get("F"), only_non_dominated_front=True)
             ret = ret[I]
 
         else:

@@ -4,13 +4,21 @@ import numpy as np
 class Dominator:
 
     @staticmethod
-    def get_relation(a, b, cva=None, cvb=None):
+    def get_relation(a, b, ax, bx):
 
-        if cva is not None and cvb is not None:
-            if cva < cvb:
-                return 1
-            elif cvb < cva:
-                return -1
+        # returns -1  if a is dominated by b
+        #         1 if b is dominated by a
+        #         0  if a and b have no domination relationship
+
+        a_infeas = ax[0].get_infeasability()
+        b_infeas = bx[0].get_infeasability()
+
+        if a_infeas > b_infeas:
+            # a is less feasable, b dominates a
+            return -1
+        elif a_infeas < b_infeas:
+            # b is less feasable, a dominates b
+            return 1
 
         val = 0
         for i in range(len(a)):
@@ -27,19 +35,18 @@ class Dominator:
         return val
 
     @staticmethod
-    def calc_domination_matrix_loop(F, G):
+    def calc_domination_matrix_loop(X, F):
         n = F.shape[0]
-        CV = np.sum(G * (G > 0).astype(np.float), axis=1)
         M = np.zeros((n, n))
         for i in range(n):
             for j in range(i + 1, n):
-                M[i, j] = Dominator.get_relation(F[i, :], F[j, :], CV[i], CV[j])
+                M[i, j] = Dominator.get_relation(F[i, :], F[j, :], X[i], X[j])
                 M[j, i] = -M[i, j]
 
         return M
 
     @staticmethod
-    def calc_domination_matrix(F, _F=None, epsilon=0.0):
+    def calc_domination_matrix(X, F, _F=None, epsilon=0.0):
 
         """
         if G is None or len(G) == 0:

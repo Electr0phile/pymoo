@@ -145,13 +145,14 @@ class ReferenceDirectionSurvival(Survival):
 
         # attributes to be set after the survival
         F = pop.get("F")
+        X = pop.get("X")
 
         # find or usually update the new ideal point - from feasible solutions
         self.ideal_point = np.min(np.vstack((self.ideal_point, F)), axis=0)
         self.worst_point = np.max(np.vstack((self.worst_point, F)), axis=0)
 
         # calculate the fronts of the population
-        fronts, rank = NonDominatedSorting().do(F, return_rank=True, n_stop_if_ranked=n_survive)
+        fronts, rank = NonDominatedSorting().do(X, F, return_rank=True, n_stop_if_ranked=n_survive)
         non_dominated, last_front = fronts[0], fronts[-1]
 
         # find the extreme points for normalization
